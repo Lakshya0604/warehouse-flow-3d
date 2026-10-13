@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warehouse Flow 3D - Intralogistics Visualization (Sample Project)</title>
+<meta name="description" content="Sample website: interactive 3D warehouse and intralogistics visualization with roller conveyors, chain conveyors, a vertical lift, rack storage and dispatch.">
+<style>
+:root{--bg:#0b0f14;--panel:#121923;--line:#25303d;--tx:#e6edf3;--mut:#8b98a8;--acc:#f2a900;--blue:#2f6fe0}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:20;background:rgba(11,15,20,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:58px}
+.logo{font-weight:700;letter-spacing:.3px;display:flex;align-items:center;gap:10px}
+.logo i{display:inline-block;width:22px;height:22px;border-radius:5px;background:linear-gradient(135deg,var(--acc),#e8741c)}
+nav .links{display:flex;gap:22px;font-size:14px;color:var(--mut)}
+nav .links a:hover{color:var(--tx)}
+.cta{background:var(--acc);color:#16120a;font-weight:600;border-radius:9px;padding:9px 16px;font-size:14px;display:inline-block}
+.cta.ghost{background:transparent;color:var(--tx);border:1px solid var(--line)}
+.hero{padding:84px 0 70px;background:radial-gradient(900px 400px at 75% 20%,rgba(47,111,224,.22),transparent 70%),radial-gradient(700px 360px at 10% 0,rgba(242,169,0,.14),transparent 70%)}
+.hero h1{font-size:clamp(34px,5.5vw,62px);line-height:1.05;margin:0 0 18px;max-width:880px;letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--acc)}
+.hero p{font-size:clamp(16px,2vw,19px);color:var(--mut);max-width:680px;margin:0 0 28px}
+.hero .btns{display:flex;gap:12px;flex-wrap:wrap}
+.stats{display:flex;gap:36px;flex-wrap:wrap;margin-top:46px;color:var(--mut);font-size:13px}
+.stats b{display:block;color:var(--tx);font-size:26px;letter-spacing:-.01em}
+section{padding:70px 0}
+h2{font-size:clamp(26px,3.4vw,38px);margin:0 0 10px;letter-spacing:-.01em}
+.sub{color:var(--mut);max-width:680px;margin:0 0 34px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card h3{margin:10px 0 6px;font-size:17px}
+.card p{margin:0;color:var(--mut);font-size:14px}
+.tag{display:inline-block;font-size:11px;padding:3px 8px;border-radius:99px;background:#1b2634;color:#9fb3c8}
+.tag.soon{background:#2a2412;color:#d9b24a}
+.sw{width:40px;height:6px;border-radius:3px}
+/* demo */
+#demo{padding-top:40px}
+.demo{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+.stagebox{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#1a2029}
+#stage{height:min(78vh,720px);min-height:480px;position:relative}
+#stage canvas{display:block;width:100%;height:100%}
+#tip{display:none;position:absolute;pointer-events:none;background:rgba(10,14,20,.92);border:1px solid var(--line);padding:5px 9px;border-radius:7px;font-size:12px;z-index:5}
+.views{display:flex;gap:6px;flex-wrap:wrap;padding:10px;background:var(--panel);border-top:1px solid var(--line)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;max-height:calc(min(78vh,720px) + 52px);overflow:auto}
+.panel h4{margin:16px 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--mut)}
+.panel h4:first-child{margin-top:0}
+.row{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin:7px 0;gap:10px}
+.row input[type=range]{width:160px;accent-color:var(--acc)}
+.row output{width:28px;text-align:right;color:var(--mut);font-variant-numeric:tabular-nums}
+.chk{display:flex;align-items:center;gap:7px;font-size:13px}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin:8px 0}
+button{font:inherit;font-size:12.5px;background:#238636;color:#fff;border:0;border-radius:8px;padding:8px 12px;cursor:pointer}
+button.alt{background:#2a3441}
+button.sm{padding:6px 10px;font-size:12px}
+button.on{background:var(--acc);color:#16120a;font-weight:600}
+button#estop{background:#7a1f1f}
+button#estop.on{background:#e03030;color:#fff}
+button:hover{filter:brightness(1.12)}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:#0e141c;border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+.kpi span{display:block;font-size:11px;color:var(--mut)}
+.kpi b{font-size:17px;font-variant-numeric:tabular-nums}
+.bar{height:6px;background:#0e141c;border-radius:4px;overflow:hidden;margin:8px 0 2px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#2f6fe0,var(--acc));width:0}
+.badge{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:600}
+.badge.green{background:#12331f;color:#4be07d}.badge.amber{background:#3a2c0b;color:#ffc045}.badge.red{background:#3d1212;color:#ff6b6b}.badge.grey{background:#262c35;color:#aab}
+#log{font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#b5c2d0;min-height:112px}
+#log div{padding:2px 0;border-bottom:1px solid #18212c}
+#log span{color:#6f8196}
+.hint{font-size:12px;color:var(--mut);margin-top:10px}
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.steps .card::before{counter-increment:s;content:"0" counter(s);color:var(--acc);font-weight:700;font-size:13px}
+footer{border-top:1px solid var(--line);padding:34px 0;color:var(--mut);font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.note{background:#1a2230;border:1px solid #2b3a52;border-radius:10px;padding:12px 14px;font-size:13px;color:#b7c6da;margin-top:16px}
+@media(max-width:980px){.demo{grid-template-columns:1fr}.panel{max-height:none}nav .links{display:none}#stage{height:440px;min-height:380px}}
+body.only nav,body.only header,body.only section:not(#demo),body.only footer{display:none}body.only #demo{padding-top:10px}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="#top"><i></i>Warehouse Flow 3D</a>
+  <div class="links"><a href="#components">Components</a><a href="#demo">Live demo</a><a href="#integrate">Integration</a><a href="#process">Process</a></div>
+  <a class="cta" href="#demo">Open live demo</a>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+  <span class="tag">Sample project - interactive 3D intralogistics</span>
+  <h1 style="margin-top:16px">See your warehouse flow <em>before</em> it is built.</h1>
+  <p>Realistic, reusable 3D components - roller conveyors, chain conveyors, vertical reciprocating conveyors, rack storage and dispatch - running as a working material-flow simulation in the browser.</p>
+  <div class="btns"><a class="cta" href="#demo">Try the live demo</a><a class="cta ghost" href="#components">Explore components</a></div>
+  <div class="stats"><div><b>4</b>reusable equipment modules</div><div><b>End to end</b>intake to dispatch flow</div><div><b>JSON + CSV</b>import and export</div><div><b>Any device</b>runs in the browser</div></div>
+</div></header>
+
+<section id="components"><div class="wrap">
+  <h2>Reusable equipment components</h2>
+  <p class="sub">Each piece is a self-contained module with its own parameters (length, width, height, speed), so a new layout is assembled from parts rather than redrawn.</p>
+  <div class="grid">
+    <div class="card"><div class="sw" style="background:#e8741c"></div><h3>Roller conveyor</h3><p>Powered rollers with animated rotation, accumulation and spacing so boxes queue up the way they do on a real line.</p></div>
+    <div class="card"><div class="sw" style="background:#2f6fe0"></div><h3>Chain conveyor</h3><p>Twin-strand chain with moving links and sprockets, elevated on a supported frame with guard rails.</p></div>
+    <div class="card"><div class="sw" style="background:#f2c200"></div><h3>VRC (vertical lift)</h3><p>Vertical reciprocating conveyor with a carriage, mast frame and a load / lift / unload / return cycle.</p></div>
+    <div class="card"><div class="sw" style="background:#1f4fa8"></div><h3>Rack storage + dispatch</h3><p>18-slot rack with put-away and retrieval, a pick lift and a dispatch conveyor to the outbound truck.</p></div>
+    <div class="card"><span class="tag soon">Next in roadmap</span><h3>Profile checker</h3><p>Height / width gate that measures each load and rejects out-of-profile cartons to a reject lane.</p></div>
+  </div>
+</div></section>
+
+<section id="demo"><div class="wrap">
+  <h2>Live demo: intake to dispatch</h2>
+  <p class="sub">Trucks unload onto the roller line, the lift raises each carton to the chain conveyor, the rack stores it, and dispatch orders send it to the outbound truck. Every control on the right works. Drag to orbit, scroll to zoom, hover a box to see its SKU.</p>
+  <div class="demo">
+    <div class="stagebox">
+      <div id="stage"><div id="tip"></div></div>
+      <div class="views" id="views"></div>
+    </div>
+    <aside class="panel">
+      <h4>Control panel <span id="status" class="badge green" style="float:right;text-transform:none;letter-spacing:0">Running</span></h4>
+      <div class="btnrow"><button id="startStop">Stop line</button><button id="estop">E-STOP</button><button id="reset" class="alt">Reset</button></div>
+      <div class="row"><span>Line speed</span><input id="speed" type="range" min="0" max="2" step="0.05" value="1"><output id="speedV">1</output></div>
+      <div class="row"><span>Inbound / min</span><input id="inRate" type="range" min="2" max="20" step="1" value="10"><output id="inRateV">10</output></div>
+      <div class="row"><span>VRC speed</span><input id="vrcSpeed" type="range" min="0.4" max="2" step="0.1" value="1.1"><output id="vrcSpeedV">1.1</output></div>
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="autoIn" checked> Auto inbound</label>
+        <label class="chk"><input type="checkbox" id="cRoller" checked> Roller line</label>
+        <label class="chk"><input type="checkbox" id="cVrc" checked> VRC lift</label>
+        <label class="chk"><input type="checkbox" id="cChain" checked> Chain conveyor</label>
+        <label class="chk"><input type="checkbox" id="cDisp" checked> Dispatch line</label>
+      </div>
+      <h4>Dispatch</h4>
+      <div class="btnrow"><button id="modeAuto" class="alt on">Auto</button><button id="modeMan" class="alt">Manual</button><button id="dispOne">Dispatch 1</button><button id="dispAll" class="alt">Dispatch all</button></div>
+      <div class="row"><span>Auto when stored &ge;</span><input id="dispAt" type="range" min="1" max="18" step="1" value="6"><output id="dispAtV">6</output></div>
+      <h4>Live KPIs</h4>
+      <div class="kpis">
+        <div class="kpi"><span>Inbound</span><b id="kIn">0</b></div><div class="kpi"><span>On line</span><b id="kLive">0</b></div>
+        <div class="kpi"><span>Stored</span><b id="kStored">0</b></div><div class="kpi"><span>Dispatched</span><b id="kOut">0</b></div>
+        <div class="kpi"><span>Put-away rate</span><b id="kRate">0</b></div><div class="kpi"><span>VRC state</span><b id="kVrc">idle</b></div>
+      </div>
+      <div class="bar"><i id="fill"></i></div>
+      <h4>Event log</h4>
+      <div id="log"></div>
+      <h4>Import / export</h4>
+      <div class="btnrow"><button id="expJson" class="alt sm">Export layout (JSON)</button><button id="impJson" class="alt sm">Import layout</button></div>
+      <div class="btnrow"><button id="sampleCsv" class="alt sm">Load sample manifest</button><button id="impCsv" class="alt sm">Import manifest CSV</button><button id="dlCsv" class="alt sm">Sample CSV</button></div>
+      <div class="btnrow"><button id="expLog" class="alt sm">Export event log</button><button id="expPng" class="alt sm">Save snapshot (PNG)</button></div>
+      <input type="file" id="fileJson" accept=".json,application/json" hidden><input type="file" id="fileCsv" accept=".csv,text/csv" hidden>
+      <p class="hint">Tip: switch components off to see the flow back up, press E-STOP, or fill the rack to watch inbound pause.</p>
+    </aside>
+  </div>
+</div></section>
+
+<section id="integrate"><div class="wrap">
+  <h2>Built to plug into your existing 3D module</h2>
+  <p class="sub">Components are plain JavaScript classes on Three.js, so they drop into an existing scene. Data moves in and out as simple files.</p>
+  <div class="grid">
+    <div class="card"><h3>Layout import / export</h3><p>Equipment settings, enabled state and stored stock are saved to JSON and restored on import.</p></div>
+    <div class="card"><h3>Inbound manifest (CSV)</h3><p>Upload a SKU / quantity list and the cartons arrive on the line in that order.</p></div>
+    <div class="card"><h3>Event log and snapshots</h3><p>Every put-away, pick and dispatch is logged and exportable, plus a one-click PNG of the current view.</p></div>
+    <div class="card"><h3>Light and fast</h3><p>Single-page, no heavy assets: about 0.8 MB total, runs smoothly on laptops and phones.</p></div>
+  </div>
+</div></section>
+
+<section id="process"><div class="wrap">
+  <h2>How a project runs</h2>
+  <p class="sub">Milestone-based, so scope and progress are always clear.</p>
+  <div class="steps">
+    <div class="card"><h3>Scope</h3><p>Agree components, parameters and the integration points with your existing module.</p></div>
+    <div class="card"><h3>Advance and kickoff</h3><p>Work starts once the advance is funded through the platform's escrow (Safe Pay).</p></div>
+    <div class="card"><h3>Build and review</h3><p>Components delivered in stages with a live preview link after each one.</p></div>
+    <div class="card"><h3>Handover</h3><p>Final payment on approval, then source handover and a short integration guide.</p></div>
+  </div>
+  <div class="note">This page is a sample built to demonstrate approach and quality. It is not a client deliverable, and all equipment, SKUs and figures are illustrative.</div>
+</div></section>
+
+<footer><div class="wrap"><span>Warehouse Flow 3D - sample project</span><span>Built with Three.js (MIT licensed)</span></div></footer>
+<script type="importmap">{"imports":{"three":"./three.module.min.js"}}</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
