@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warehouse Flow 3D - Intralogistics Visualization Demo</title>
+<style>
+  html,body{margin:0;height:100%;background:#0d1117;font-family:system-ui,Segoe UI,Roboto,sans-serif;color:#e6edf3;overflow:hidden}
+  canvas{display:block}
+  #hud{position:fixed;top:16px;left:16px;background:rgba(13,17,23,.78);backdrop-filter:blur(8px);border:1px solid #30363d;border-radius:12px;padding:14px 16px;width:250px}
+  #hud h1{font-size:15px;margin:0 0 4px;letter-spacing:.2px}
+  #hud p{margin:0 0 10px;font-size:12px;color:#8b949e;line-height:1.4}
+  .row{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin:6px 0}
+  .row input[type=range]{width:120px}
+  .stat{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;color:#8b949e}
+  .stat b{color:#e6edf3;font-variant-numeric:tabular-nums}
+  button{background:#238636;border:0;color:#fff;border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;margin-top:8px;margin-right:6px}
+  button.alt{background:#30363d}
+  #legend{position:fixed;bottom:14px;left:16px;font-size:11px;color:#8b949e}
+</style>
+</head>
+<body>
+<div id="hud">
+  <h1>Warehouse Flow 3D</h1>
+  <p>Roller conveyor, chain conveyor and vertical lift (VRC) as reusable components. Drag to orbit, scroll to zoom.</p>
+  <div class="row"><span>Line speed</span><input id="speed" type="range" min="0" max="2" step="0.05" value="1"></div>
+  <div class="row"><span>Box spawn rate</span><input id="rate" type="range" min="0.5" max="4" step="0.1" value="2"></div>
+  <div class="stat"><span>Boxes delivered</span><b id="count">0</b></div>
+  <div class="stat"><span>Boxes on line</span><b id="live">0</b></div>
+  <button id="pause">Pause</button><button id="view" class="alt">Change view</button>
+</div>
+<div id="legend">Orange: roller conveyor &nbsp;|&nbsp; Blue: chain conveyor &nbsp;|&nbsp; Yellow: vertical lift</div>
+<script type="importmap">{"imports":{"three":"./three.module.min.js"}}</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
